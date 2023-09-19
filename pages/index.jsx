@@ -1,8 +1,15 @@
+import Layout from "@/components/layout";
+import Score from "@/components/game/Score";
+import Board from "@/components/game/Board";
+
 const Home = () => {
 	return (
-		<main>
-			<span>HELLO WORLD</span>
-		</main>
+		<Layout>
+			<div className="flex flex-col gap-4">
+				<Score />
+				<Board />
+			</div>
+		</Layout>
 	);
 };
 
