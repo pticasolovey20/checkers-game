@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { DndContext } from "@dnd-kit/core";
+import { useEffect, useState } from "react";
+import { DndContext, useSensor, TouchSensor } from "@dnd-kit/core";
 import { classNames } from "@/utils";
 
 import drag from "@/public/images/drag.png";
@@ -9,19 +9,31 @@ import Droppable from "@/components/droppable";
 import Draggable from "@/components/draggable";
 
 const Board = () => {
+	const [containerWidth, setContainerWidth] = useState(0);
+	const [parent, setParent] = useState("id-0-0");
+
 	const rows = 8;
 	const cols = 8;
 
-	const [parent, setParent] = useState("id-0-0");
+	useEffect(() => {
+		const updateContainerWidth = () => {
+			const containerElement = document.querySelector(".board");
+			if (containerElement) {
+				const containerStyles = getComputedStyle(containerElement);
+				const width = parseInt(containerStyles.width, 10);
+				setContainerWidth(width);
+			}
+		};
 
-	const square = <div className="aspect-square" />;
-	const draggableMarkup = (
-		<Draggable id="draggable">
-			<Image className="aspect-square rounded-full" src={drag} alt="drag me" layout="fit" />
-		</Draggable>
-	);
+		updateContainerWidth();
+
+		window.addEventListener("resize", updateContainerWidth);
+		return () => window.removeEventListener("resize", updateContainerWidth);
+	}, []);
 
 	const handleDragEnd = (event) => setParent(event?.over && event?.over.id);
+
+	const sensor = useSensor(TouchSensor, { activationConstraint: { distance: 10 } });
 
 	const generateBoard = () => {
 		const board = [];
@@ -31,8 +43,24 @@ const Board = () => {
 				const isWhite = (i + j) % 2 === 0;
 				const bgColor = isWhite ? "bg-white" : "bg-black/75";
 
+				const cellSize = Math.min(containerWidth / cols, containerWidth / rows);
+
+				const restrictions = {
+					maxX: (cols - 1) * cellSize,
+					maxY: (rows - 1) * cellSize,
+					minX: 0,
+					minY: 0,
+				};
+
 				const cellId = `id-${i}-${j}`;
-				const cellContent = parent === cellId ? draggableMarkup : square;
+				const cellContent =
+					parent === cellId ? (
+						<Draggable id="draggable" restrictions={restrictions}>
+							<Image className="aspect-square rounded-full" src={drag} alt="drag me" layout="fit" />
+						</Draggable>
+					) : (
+						<div className="aspect-square" />
+					);
 
 				board.push(
 					<div key={cellId} className={`w-full h-full shadow-black/25 shadow-lg ${bgColor}`}>
@@ -49,12 +77,14 @@ const Board = () => {
 		<div className="p-2 sm:p-4 rounded-xl sm:rounded-3xl bg-gray-300 shadow-black/25 shadow-lg">
 			<div
 				className={classNames(
-					"aspect-square overflow-hidden",
+					"board aspect-square overflow-hidden",
 					"grid grid-cols-8 grid-rows-8",
 					"rounded-lg sm:rounded-xl"
 				)}
 			>
-				<DndContext onDragEnd={handleDragEnd}>{generateBoard()}</DndContext>
+				<DndContext onDragEnd={handleDragEnd} sensors={[sensor]}>
+					{generateBoard()}
+				</DndContext>
 			</div>
 		</div>
 	);
