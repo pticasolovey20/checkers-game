@@ -33,14 +33,14 @@ const Board = () => {
 
 	const handleDragEnd = (event) => setParent(event?.over && event?.over.id);
 
-	const sensor = useSensor(TouchSensor, { activationConstraint: { distance: 10 } });
+	const sensor = useSensor(TouchSensor, { activationConstraint: null });
 
 	const generateBoard = () => {
 		const board = [];
 
-		for (let i = 0; i < rows; i++) {
-			for (let j = 0; j < cols; j++) {
-				const isWhite = (i + j) % 2 === 0;
+		for (let rowIndex = 0; rowIndex < rows; rowIndex++) {
+			for (let colIndex = 0; colIndex < cols; colIndex++) {
+				const isWhite = (rowIndex + colIndex) % 2 === 0;
 				const bgColor = isWhite ? "bg-white" : "bg-black/75";
 
 				const cellSize = Math.min(containerWidth / cols, containerWidth / rows);
@@ -52,7 +52,7 @@ const Board = () => {
 					minY: 0,
 				};
 
-				const cellId = `id-${i}-${j}`;
+				const cellId = `id-${rowIndex}-${colIndex}`;
 				const cellContent =
 					parent === cellId ? (
 						<Draggable id="draggable" restrictions={restrictions}>
