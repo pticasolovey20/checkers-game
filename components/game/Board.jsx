@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { restrictToParentElement } from "@dnd-kit/modifiers";
-import { classNames } from "@/utils";
 
 import Droppable from "@/components/droppable";
 import Draggable from "@/components/draggable";
-import Piece from "../piece";
+import Piece from "./Piece";
 
 const initialFirstPlayerPositions = [
 	{ id: "p1-1", row: 0, col: 1 },
@@ -41,6 +40,8 @@ const Board = () => {
 	const [firstPlayerPieces, setFirstPlayerPieces] = useState(initialFirstPlayerPositions);
 	const [secondPlayerPieces, setSecondPlayerPieces] = useState(initialSecondPlayerPositions);
 
+	const [active, setActive] = useState("");
+
 	const rows = 8;
 	const cols = 8;
 
@@ -53,7 +54,10 @@ const Board = () => {
 			const [row, col] = event.over.id.split("-").map(Number).slice(1);
 			const isWhiteCell = (row + col) % 2 === 0;
 
-			if (isWhiteCell) return;
+			if (isWhiteCell) {
+				setActive("");
+				return;
+			}
 
 			const isCellOccupied = (_, pieces) => pieces.some((piece) => piece.row === row && piece.col === col);
 
@@ -61,7 +65,10 @@ const Board = () => {
 			const playerPieces = player === 1 ? firstPlayerPieces : secondPlayerPieces;
 			const opponentPieces = opponentPlayer === 1 ? firstPlayerPieces : secondPlayerPieces;
 
-			if (isCellOccupied(player, playerPieces) || isCellOccupied(opponentPlayer, opponentPieces)) return;
+			if (isCellOccupied(player, playerPieces) || isCellOccupied(opponentPlayer, opponentPieces)) {
+				setActive("");
+				return;
+			}
 
 			if (player === 1) {
 				const updatedFirstPlayerPieces = firstPlayerPieces.filter((piece) => piece.id !== pieceId);
@@ -72,7 +79,11 @@ const Board = () => {
 				updatedSecondPlayerPieces.push({ id: pieceId, row, col });
 				setSecondPlayerPieces(updatedSecondPlayerPieces);
 			}
+
+			setActive("");
 		}
+
+		setActive("");
 	};
 
 	const mouseSensor = useSensor(MouseSensor, { activationConstraint: { distance: 10 } });
@@ -85,7 +96,7 @@ const Board = () => {
 		for (let rowIndex = 0; rowIndex < rows; rowIndex++) {
 			for (let colIndex = 0; colIndex < cols; colIndex++) {
 				const isWhite = (rowIndex + colIndex) % 2 === 0;
-				const bgColor = isWhite ? "bg-white" : "bg-black";
+				const bgColor = isWhite ? "bg-white" : "bg-black/75";
 
 				const cellId = `cell-${rowIndex}-${colIndex}`;
 
@@ -97,13 +108,13 @@ const Board = () => {
 
 					if (firstPlayerPiece) {
 						return (
-							<Draggable piece={firstPlayerPiece} modifiers={[restrictToParentElement]}>
+							<Draggable piece={firstPlayerPiece} modifiers={[restrictToParentElement]} active={active}>
 								<Piece player={1} />
 							</Draggable>
 						);
 					} else if (secondPlayerPiece) {
 						return (
-							<Draggable piece={secondPlayerPiece} modifiers={[restrictToParentElement]}>
+							<Draggable piece={secondPlayerPiece} modifiers={[restrictToParentElement]} active={active}>
 								<Piece player={2} />
 							</Draggable>
 						);
@@ -112,7 +123,7 @@ const Board = () => {
 				};
 
 				board.push(
-					<div key={cellId} role="gridcell" className={`w-full h-full shadow-black/25 shadow-lg ${bgColor}`}>
+					<div key={cellId} role="gridcell" className={`w-full h-full ${bgColor}`}>
 						<Droppable id={cellId}>{pieceInCell(rowIndex, colIndex)}</Droppable>
 					</div>
 				);
@@ -123,16 +134,16 @@ const Board = () => {
 	};
 
 	return (
-		<div className="p-2 sm:p-4 rounded-xl sm:rounded-3xl bg-gray-300 shadow-black/25 shadow-lg">
+		<div className="p-2 rounded-lg bg-gray-400">
 			<div
 				role="grid"
-				className={classNames(
-					"board overflow-hidden",
-					"grid grid-cols-8 grid-rows-8",
-					"rounded-lg sm:rounded-xl"
-				)}
+				className="board grid grid-cols-8 grid-rows-8 rounded-md overflow-hidden shadow-black/25 shadow-lg"
 			>
-				<DndContext onDragEnd={handleDrop} sensors={sensors}>
+				<DndContext
+					onDragEnd={handleDrop}
+					onDragStart={(event) => setActive(event.active.id.id)}
+					sensors={sensors}
+				>
 					{generateBoard()}
 				</DndContext>
 			</div>
