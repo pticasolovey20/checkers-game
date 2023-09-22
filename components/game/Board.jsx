@@ -55,6 +55,14 @@ const Board = () => {
 
 			if (isWhiteCell) return;
 
+			const isCellOccupied = (_, pieces) => pieces.some((piece) => piece.row === row && piece.col === col);
+
+			const opponentPlayer = player === 1 ? 2 : 1;
+			const playerPieces = player === 1 ? firstPlayerPieces : secondPlayerPieces;
+			const opponentPieces = opponentPlayer === 1 ? firstPlayerPieces : secondPlayerPieces;
+
+			if (isCellOccupied(player, playerPieces) || isCellOccupied(opponentPlayer, opponentPieces)) return;
+
 			if (player === 1) {
 				const updatedFirstPlayerPieces = firstPlayerPieces.filter((piece) => piece.id !== pieceId);
 				updatedFirstPlayerPieces.push({ id: pieceId, row, col });
