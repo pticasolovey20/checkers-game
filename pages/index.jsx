@@ -5,7 +5,7 @@ import Board from "@/components/game/Board";
 const Home = () => {
 	return (
 		<Layout>
-			<div className="flex flex-col gap-4">
+			<div className="flex flex-col gap-2 md:gap-4">
 				<Score />
 				<Board />
 			</div>
