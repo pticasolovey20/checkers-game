@@ -10,7 +10,7 @@ const Layout = ({ children }) => {
 				"pt-6 sm:pt-0"
 			)}
 		>
-			<section className="w-[90%] md:w-[70%] lg:w-[60%] xl:w-[45%] xxl:w-[35%]">{children}</section>
+			<section className="w-[95%] md:w-[70%] lg:w-[60%] xl:w-[45%] xxl:w-[35%]">{children}</section>
 		</main>
 	);
 };

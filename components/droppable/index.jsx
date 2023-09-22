@@ -4,7 +4,7 @@ const Droppable = ({ children, id }) => {
 	const { setNodeRef } = useDroppable({ id });
 
 	return (
-		<div ref={setNodeRef} className="w-full h-full p-2">
+		<div ref={setNodeRef} className="w-full h-full p-1">
 			{children}
 		</div>
 	);

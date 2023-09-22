@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { restrictToParentElement } from "@dnd-kit/modifiers";
 import { classNames } from "@/utils";
@@ -41,45 +41,29 @@ const Board = () => {
 	const [firstPlayerPieces, setFirstPlayerPieces] = useState(initialFirstPlayerPositions);
 	const [secondPlayerPieces, setSecondPlayerPieces] = useState(initialSecondPlayerPositions);
 
-	const [containerWidth, setContainerWidth] = useState(0);
-
 	const rows = 8;
 	const cols = 8;
-
-	useEffect(() => {
-		const updateContainerWidth = () => {
-			const containerElement = document.querySelector(".board");
-			if (containerElement) {
-				const containerStyles = getComputedStyle(containerElement);
-				const width = parseInt(containerStyles.width, 10);
-				setContainerWidth(width);
-			}
-		};
-
-		updateContainerWidth();
-
-		window.addEventListener("resize", updateContainerWidth);
-		return () => window.removeEventListener("resize", updateContainerWidth);
-	}, []);
 
 	const handleDrop = (event) => {
 		const piece = event?.active?.id;
 		const pieceId = piece.id;
 		const player = pieceId.startsWith("p1") ? 1 : 2;
 
-		const numbers = event.over.id.split("-").map(Number).slice(1);
+		if (event?.over) {
+			const [row, col] = event.over.id.split("-").map(Number).slice(1);
+			const isWhiteCell = (row + col) % 2 === 0;
 
-		const row = numbers[0];
-		const col = numbers[1];
+			if (isWhiteCell) return;
 
-		if (player === 1) {
-			const updatedFirstPlayerPieces = firstPlayerPieces.filter((piece) => piece.id !== pieceId);
-			updatedFirstPlayerPieces.push({ id: pieceId, row, col });
-			setFirstPlayerPieces(updatedFirstPlayerPieces);
-		} else if (player === 2) {
-			const updatedSecondPlayerPieces = secondPlayerPieces.filter((piece) => piece.id !== pieceId);
-			updatedSecondPlayerPieces.push({ id: pieceId, row, col });
-			setSecondPlayerPieces(updatedSecondPlayerPieces);
+			if (player === 1) {
+				const updatedFirstPlayerPieces = firstPlayerPieces.filter((piece) => piece.id !== pieceId);
+				updatedFirstPlayerPieces.push({ id: pieceId, row, col });
+				setFirstPlayerPieces(updatedFirstPlayerPieces);
+			} else if (player === 2) {
+				const updatedSecondPlayerPieces = secondPlayerPieces.filter((piece) => piece.id !== pieceId);
+				updatedSecondPlayerPieces.push({ id: pieceId, row, col });
+				setSecondPlayerPieces(updatedSecondPlayerPieces);
+			}
 		}
 	};
 
@@ -95,15 +79,7 @@ const Board = () => {
 				const isWhite = (rowIndex + colIndex) % 2 === 0;
 				const bgColor = isWhite ? "bg-white" : "bg-black";
 
-				const cellId = `p${rowIndex}-${colIndex}`;
-				const cellSize = Math.min(containerWidth / cols, containerWidth / rows);
-
-				const restrictions = {
-					maxX: (cols - 1) * cellSize,
-					maxY: (rows - 1) * cellSize,
-					minX: 0,
-					minY: 0,
-				};
+				const cellId = `cell-${rowIndex}-${colIndex}`;
 
 				const pieceInCell = (row, col) => {
 					const firstPlayerPiece = firstPlayerPieces.find((piece) => piece.row === row && piece.col === col);
@@ -113,14 +89,14 @@ const Board = () => {
 
 					if (firstPlayerPiece) {
 						return (
-							<Draggable piece={firstPlayerPiece} restrictions={restrictions}>
+							<Draggable piece={firstPlayerPiece} modifiers={[restrictToParentElement]}>
 								<Piece player={1} />
 							</Draggable>
 						);
 					} else if (secondPlayerPiece) {
 						return (
-							<Draggable piece={secondPlayerPiece} restrictions={restrictions}>
-								<Piece player={2} />;
+							<Draggable piece={secondPlayerPiece} modifiers={[restrictToParentElement]}>
+								<Piece player={2} />
 							</Draggable>
 						);
 					}
@@ -128,8 +104,8 @@ const Board = () => {
 				};
 
 				board.push(
-					<div key={cellId} className={`w-full h-full shadow-black/25 shadow-lg ${bgColor}`}>
-						<Droppable id={`cell-${rowIndex}-${colIndex}`}>{pieceInCell(rowIndex, colIndex)}</Droppable>
+					<div key={cellId} role="gridcell" className={`w-full h-full shadow-black/25 shadow-lg ${bgColor}`}>
+						<Droppable id={cellId}>{pieceInCell(rowIndex, colIndex)}</Droppable>
 					</div>
 				);
 			}
@@ -141,6 +117,7 @@ const Board = () => {
 	return (
 		<div className="p-2 sm:p-4 rounded-xl sm:rounded-3xl bg-gray-300 shadow-black/25 shadow-lg">
 			<div
+				role="grid"
 				className={classNames(
 					"board overflow-hidden",
 					"grid grid-cols-8 grid-rows-8",
