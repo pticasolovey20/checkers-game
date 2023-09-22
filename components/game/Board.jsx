@@ -82,6 +82,8 @@ const Board = () => {
 
 			setActive("");
 		}
+
+		setActive("");
 	};
 
 	const mouseSensor = useSensor(MouseSensor, { activationConstraint: { distance: 10 } });
